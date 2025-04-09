@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+import { Schema, model } from 'mongoose';
+import { hash, compare } from 'bcryptjs';
 
-const userSchema = new mongoose.Schema({
+const userSchema = new Schema({
   // Common authentication fields
   email: {
     type: String,
@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     required: true,
-    enum: ['guest', 'employee', 'admin'],
+    enum: ['Guest', 'Employee',"Admin"],
     default: 'guest'
   },
 
@@ -55,18 +55,18 @@ const userSchema = new mongoose.Schema({
 // Password hashing middleware
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 10);
+  this.password = await hash(this.password, 10);
   next();
 });
 
 // Password comparison method
 userSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+  return await compare(candidatePassword, this.password);
 };
 
 // Indexes
-userSchema.index({ email: 1 });
+
 userSchema.index({ role: 1 });
 
-const User = mongoose.model('User', userSchema);
-module.exports = User;
+const User = model('User', userSchema);
+export default User;

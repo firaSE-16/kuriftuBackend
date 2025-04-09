@@ -2,6 +2,7 @@ import express, { json } from 'express';
 import { config } from 'dotenv';
 import connectDB from './config/db.js';
 
+import subAdminRoute from './routes/subAdminRoutes.js';
 import cors from 'cors';
 
 
@@ -16,7 +17,7 @@ const app = express();
 
 app.use(cors());
 app.use(json()); 
-
+app.use('/subadmin', subAdminRoute); 
 
 
 

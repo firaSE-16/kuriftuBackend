@@ -1,6 +1,7 @@
-const User = require('./User');
+import User from './User.model.js'; 
+import { Schema } from 'mongoose';// Import the User model
 
-const employeeSchema = new mongoose.Schema({
+const employeeSchema = new Schema({
   // Employee-specific fields
   employeeId: {
     type: String,
@@ -8,29 +9,63 @@ const employeeSchema = new mongoose.Schema({
     required: true
   },
   branch: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Branch',
     required: true
   },
-
 
   workingHours: {
     type: Map,
     of: String
   },
-  accountNumber :[String],
 
+  
+  accountNumber: [String],
   assignedFeedbacks: [{
     feedback: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'Feedback'
-    },
-   
-   
+    }
   }],
-  // Override base role with employee-specific roles
+  
+  rating: {
+    type: Number,
+    required: true,
+    min: 0,
+    max: 10,
+    default: 5
+  },
+  // In Employee.model.js
+employeeType: {
+    type: String,
+    required: true,
+    enum: ['chef', 'waiter', 'housekeeping', 'reception', 'manager'],
+    default: 'reception'
+  },
+
+  status: {
+    type: String,
+    enum: ['active', 'suspended', 'inactive'],
+    default: 'active',
+  },
 });
 
-// Set discriminator
+// Method to update the employee's status based on the rating
+employeeSchema.methods.updateStatus = function () {
+  if (this.rating < 3) {
+    this.status = 'inactive'; 
+  } else {
+    this.status = 'active';
+  }
+};
+
+// Hook to automatically update the status before saving
+employeeSchema.pre('save', function (next) {
+  this.updateStatus();
+  next();
+});
+
+// Create and export the Employee model using User.discriminator
 const Employee = User.discriminator('Employee', employeeSchema);
-module.exports = Employee;
+
+export default Employee;

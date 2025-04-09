@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const branchSchema = new mongoose.Schema({
+const branchSchema = new Schema({
   name: {
     type: String,
     required: true,
@@ -31,4 +31,4 @@ const branchSchema = new mongoose.Schema({
 
 branchSchema.index({ location: 'text' });
 
-module.exports = mongoose.model('Branch', branchSchema);
+export default model('Branch', branchSchema);
