@@ -9,11 +9,11 @@ const employeeSchema = new mongoose.Schema({
     required: true
   },
   workingHours: {
-    type: Map,
-    of: String
+    type: String,
+    
   },
   accountNumber: [String],
-
+  
   assignedFeedbacks: [{
     feedback: {
       type: mongoose.Schema.Types.ObjectId,

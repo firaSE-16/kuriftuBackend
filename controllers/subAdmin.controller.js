@@ -5,66 +5,38 @@ import Branch from "../models/Branch.model.js";
 import Feedback from "../models/Feedback.model.js";
 import Service from "../models/Service.models.js";
 import mongoose from "mongoose";
+import bcrypt from 'bcryptjs';
+const { hash, compare } = bcrypt;
 
 
 
 const addEmployee = async (req, res) => {
     try {
       const subAdmin = req.user;
-  
-      const {
-        employeeId,
-        firstName,       // Changed from 'name'
-        lastName,        // Added
-        email,
-        password,
-        phone,
-        workingHours,
-        accountNumber,
-        rating = 5   ,
-        employeeType ="cheff"  
-      } = req.body;
-  
-      // Required fields check
-      if (!employeeId || !firstName || !lastName || !email || !password) {
-        return res.status(400).json({ 
-          message: "Missing required fields",
-          required: ["employeeId", "firstName", "lastName", "email", "password"]
-        });
-      }
-  
-    //   Check if employee exists
-      const exists = await Employee.findOne({ email });
+
+      const {password,...data}=req.body
+      const email=data.email
+      
+      //   Check if employee exists
+      const exists = await Employee.findOne({email});
       if (exists) {
         return res.status(409).json({ message: "Employee already exists" });
       }
+      const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
+        
+            const newEmployee = new Employee({
+              ...data,
+              password: hashedPassword,
+            });
   
       // Create new employee
-      const newEmployee = await Employee.create({
-        employeeId,
-        firstName,
-        lastName,
-        email,
-        role: "Employee",
-        password,
-        phone,
-        branch: "507f1f77bcf86cd799439011",
-        workingHours,
-        accountNumber,
-        rating , 
-        employeeType       // Added
-      });
+   
   
       res.status(201).json({
         message: "Employee added successfully",
         data: {
-          id: newEmployee._id,
-          employeeId: newEmployee.employeeId,
-          employeeType:newEmployee.employeeType,
-          name: `${newEmployee.firstName} ${newEmployee.lastName}`,
-          email: newEmployee.email,
-          branch: newEmployee.branch,
-          status: newEmployee.status
+          data
         }
       });
   
@@ -84,7 +56,8 @@ const getBranchEmployees = async (req, res) => {
     //   return res.status(403).json({ message: "Unauthorized" });
     // }
 
-    const employees = await Employee.find({ branch:"507f1f77bcf86cd799439011"});
+
+    const employees = await Employee.find({ branch:"67f68711026dd9445a0d0bc7"});  // branch:subAdmin.branch
 
     res.status(200).json({
       message: "Employees fetched successfully",
@@ -133,97 +106,97 @@ const deleteEmployee = async (req, res) => {
   }
 };
 
-const addService = async (req, res) => {
-  try {
-    const subAdmin = req.user; // Assuming subadmin is authenticated
-    const { name, description, price, images, video } = req.body;
+// const addService = async (req, res) => {
+//   try {
+//     const subAdmin = req.user; // Assuming subadmin is authenticated
+//     const { name, description, price, images, video } = req.body;
     
 
-    // Validate required fields
-    if (!name || !price || !Array.isArray(price) || price.length === 0) {
-        return res.status(400).json({
-          message: "Name and at least one price entry are required",
-          required: ["name", "price"],
-          priceFormat: [{ cost: "number", ref: "branchId" }]
-        });
-      }
+//     // Validate required fields
+//     if (!name || !price || !Array.isArray(price) || price.length === 0) {
+//         return res.status(400).json({
+//           message: "Name and at least one price entry are required",
+//           required: ["name", "price"],
+//           priceFormat: [{ cost: "number", ref: "branchId" }]
+//         });
+//       }
   
-      // Validate price structure
-      const invalidPrices = price.filter(p => 
-        typeof p.cost !== 'number' || !mongoose.Types.ObjectId.isValid(p.ref)
-      );
+//       // Validate price structure
+//       const invalidPrices = price.filter(p => 
+//         typeof p.cost !== 'number' || !mongoose.Types.ObjectId.isValid(p.ref)
+//       );
       
-      if (invalidPrices.length > 0) {
-        return res.status(400).json({
-          message: "Invalid price structure",
-          example: [{ cost: 100, ref: "507f1f77bcf86cd799439011" }]
-        });
-      }
+//       if (invalidPrices.length > 0) {
+//         return res.status(400).json({
+//           message: "Invalid price structure",
+//           example: [{ cost: 100, ref: "507f1f77bcf86cd799439011" }]
+//         });
+//       }
   
-      // Check if service with same name already exists in this branch
-      const existingService = await Service.findOne({
-        name,
-        "price.ref": subAdmin.branch // Check if this branch already has this service
-      });
+//       // Check if service with same name already exists in this branch
+//       const existingService = await Service.findOne({
+//         name,
+//         "price.ref": subAdmin.branch // Check if this branch already has this service
+//       });
   
-      if (existingService) {
-        return res.status(409).json({
-          message: "Service with this name already exists in your branch",
-          existingServiceId: existingService._id
-        });
-      }
+//       if (existingService) {
+//         return res.status(409).json({
+//           message: "Service with this name already exists in your branch",
+//           existingServiceId: existingService._id
+//         });
+//       }
   
-      // Create new service
-      const newService = await Service.create({
-        name,
-        description,
-        price: price.map(p => ({
-          cost: p.cost,
-          ref: p.ref
-        })),
-        images: images || [],
-        video: video || [],
-        branch: subAdmin.branch, // Associate with subadmin's branch
-        rating: {
-          average: 0,
-          count: 0
-        },
-        isActive: true
-      });
+//       // Create new service
+//       const newService = await Service.create({
+//         name,
+//         description,
+//         price: price.map(p => ({
+//           cost: p.cost,
+//           ref: p.ref
+//         })),
+//         images: images || [],
+//         video: video || [],
+//         branch: subAdmin.branch, // Associate with subadmin's branch
+//         rating: {
+//           average: 0,
+//           count: 0
+//         },
+//         isActive: true
+//       });
   
-      // Update branch's services array (assuming Branch model has services array)
-      await Branch.findByIdAndUpdate(
-        subAdmin.branch,
-        { $addToSet: { services: newService._id } },
-        { new: true }
-      );
+//       // Update branch's services array (assuming Branch model has services array)
+//       await Branch.findByIdAndUpdate(
+//         subAdmin.branch,
+//         { $addToSet: { services: newService._id } },
+//         { new: true }
+//       );
   
-      // Prepare response data
-      const responseData = {
-        id: newService._id,
-        name: newService.name,
-        description: newService.description,
-        prices: newService.price.filter(p => p.ref.equals(subAdmin.branch)),
-        images: newService.images,
-        video: newService.video,
-        rating: newService.rating,
-        isActive: newService.isActive,
-        createdAt: newService.createdAt
-      };
+//       // Prepare response data
+//       const responseData = {
+//         id: newService._id,
+//         name: newService.name,
+//         description: newService.description,
+//         prices: newService.price.filter(p => p.ref.equals(subAdmin.branch)),
+//         images: newService.images,
+//         video: newService.video,
+//         rating: newService.rating,
+//         isActive: newService.isActive,
+//         createdAt: newService.createdAt
+//       };
   
-      res.status(201).json({
-        message: "Service added successfully",
-        data: responseData
-      });
+//       res.status(201).json({
+//         message: "Service added successfully",
+//         data: responseData
+//       });
   
-    } catch (error) {
-      console.error("Service creation error:", error);
-      res.status(500).json({ 
-        message: "Server Error",
-        error: error.message 
-      });
-    }
-  };
+//     } catch (error) {
+//       console.error("Service creation error:", error);
+//       res.status(500).json({ 
+//         message: "Server Error",
+//         error: error.message 
+//       });
+//     }
+//   };
   
   const getServiceTypeFeedbacks = async (req, res) => {
     try {
@@ -475,7 +448,7 @@ const addService = async (req, res) => {
       
       getBranchUsers,
       getServiceTypeFeedbacks,
-      addService,
+      // addService,
     addEmployee,
     getBranchEmployees,
     deleteEmployee,
