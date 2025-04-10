@@ -1,9 +1,9 @@
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const feedbackProcessedSchema = new mongoose.Schema({
+const feedbackProcessedSchema = new Schema({
   // Original Feedback Reference
   originalFeedback: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Feedback',
     required: true
   },
@@ -35,7 +35,7 @@ const feedbackProcessedSchema = new mongoose.Schema({
     default: 'unprocessed'
   },
   assignedTo: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Employee'
   },
   resolutionNotes: String,
@@ -43,13 +43,13 @@ const feedbackProcessedSchema = new mongoose.Schema({
 
   // Metadata
   branch: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Branch',
     required: true
   },
   adminUpdates: [{
     admin: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'Employee'
     },
     statusChange: String,
@@ -74,4 +74,4 @@ feedbackProcessedSchema.index({ problemCategory: 1, status: 1 });
 feedbackProcessedSchema.index({ branch: 1, isUrgent: 1 });
 feedbackProcessedSchema.index({ keywords: 'text' });
 
-module.exports = mongoose.model('FeedbackProcessed', feedbackProcessedSchema);
+export default model('FeedbackProcessed', feedbackProcessedSchema);

@@ -1,9 +1,9 @@
 // models/Reward.js
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const rewardSchema = new mongoose.Schema({
+const rewardSchema = new Schema({
   guest: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Guest',
     required: true
   },
@@ -17,7 +17,7 @@ const rewardSchema = new mongoose.Schema({
     required: true
   },
   service: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Service'
   },
   dateEarned: {
@@ -36,4 +36,4 @@ const rewardSchema = new mongoose.Schema({
 rewardSchema.index({ guest: 1, status: 1 });
 rewardSchema.index({ expiryDate: 1 });
 
-module.exports = mongoose.model('Reward', rewardSchema);
+export default model('Reward', rewardSchema);

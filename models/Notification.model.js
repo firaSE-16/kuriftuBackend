@@ -1,10 +1,10 @@
 // models/Notification.js
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const notificationSchema = new mongoose.Schema({
+const notificationSchema = new Schema({
   // Recipient
   user: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'User', // Links to Guest/Employee
     required: true
   },
@@ -40,4 +40,4 @@ const notificationSchema = new mongoose.Schema({
 notificationSchema.index({ user: 1, isRead: 1 });
 notificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-module.exports = mongoose.model('Notification', notificationSchema);
+export default model('Notification', notificationSchema);

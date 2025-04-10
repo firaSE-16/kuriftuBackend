@@ -1,7 +1,7 @@
 // models/Food.js
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const foodSchema = new mongoose.Schema({
+const foodSchema = new Schema({
   // Core identifiers
   name: {
     type: String,
@@ -77,7 +77,7 @@ const foodSchema = new mongoose.Schema({
   },
 
   availableAt: [{ // Which branches/restaurants serve this
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Restaurant'
   }],
 
@@ -97,4 +97,4 @@ foodSchema.index({ name: 'text', description: 'text' });
 foodSchema.index({ category: 1, cuisineType: 1 });
 foodSchema.index({ dietaryTags: 1 });
 
-module.exports = mongoose.model('Food', foodSchema);
+export default model('Food', foodSchema);
