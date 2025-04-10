@@ -1,4 +1,6 @@
-const User = require('./User');
+
+import mongoose from "mongoose";
+import User from './User.model.js';
 
 const guestSchema = new mongoose.Schema({
   // Guest-specific fields
@@ -16,4 +18,4 @@ const guestSchema = new mongoose.Schema({
 
 // Set discriminator
 const Guest = User.discriminator('Guest', guestSchema);
-module.exports = Guest;
+export default Guest;

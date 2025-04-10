@@ -1,7 +1,7 @@
-const Service = require('./Service');
-const mongoose = require('mongoose');
+import { discriminator } from './Service';
+import { Schema } from 'mongoose';
 
-const spaSchema = new mongoose.Schema({
+const spaSchema = new Schema({
   treatmentTypes: [{
     name: String,
     description: String,
@@ -10,4 +10,4 @@ const spaSchema = new mongoose.Schema({
   }],
 });
 
-module.exports = Service.discriminator('Spa', spaSchema);
+export default discriminator('Spa', spaSchema);

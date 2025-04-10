@@ -1,9 +1,9 @@
 // models/Order.js
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const orderItemSchema = new mongoose.Schema({
+const orderItemSchema = new Schema({
   menuItem: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Food',
     required: true
   },
@@ -19,14 +19,14 @@ const orderItemSchema = new mongoose.Schema({
     default: 'pending'
   },
   preparedBy: {  // Chef who accepted the dish
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Employee'
   },
   startedAt: Date,  // When chef began preparation
   completedAt: Date  // When dish was marked ready
 });
 
-const orderSchema = new mongoose.Schema({
+const orderSchema = new Schema({
   // Order Identification
   orderNumber: {
     type: String,
@@ -36,17 +36,17 @@ const orderSchema = new mongoose.Schema({
 
   // Stakeholders
   guest: {  // Who placed the order
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Guest',
     required: true
   },
   waiter: {  // Who took the order
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Employee',
     required: true
   },
   branch: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Branch',
     required: true
   },
@@ -65,7 +65,7 @@ const orderSchema = new mongoose.Schema({
   statusHistory: [{
     status: String,
     changedBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'Employee'
     },
     timestamp: {
@@ -103,4 +103,4 @@ orderSchema.index({ guest: 1 });
 orderSchema.index({ waiter: 1 });
 orderSchema.index({ branch: 1, createdAt: -1 });
 
-module.exports = mongoose.model('Order', orderSchema);
+export default model('Order', orderSchema);

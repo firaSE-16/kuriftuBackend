@@ -1,14 +1,14 @@
 // models/Feedback.js
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const feedbackSchema = new mongoose.Schema({
+const feedbackSchema = new Schema({
   service: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Service',
     required: true
   },
   guest: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Guest',
     required: true
   },
@@ -27,4 +27,4 @@ const feedbackSchema = new mongoose.Schema({
 feedbackSchema.index({ service: 1, rating: 1 });
 feedbackSchema.index({ guest: 1 });
 
-module.exports = mongoose.model('Feedback', feedbackSchema);
+export default model('Feedback', feedbackSchema);

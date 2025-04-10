@@ -1,7 +1,7 @@
 // models/Event.js
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const eventSchema = new mongoose.Schema({
+const eventSchema = new Schema({
   // Core Info
   title: {
     type: String,
@@ -17,7 +17,7 @@ const eventSchema = new mongoose.Schema({
     max: 100
   },
   services: [{
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Service' // Spa, Restaurant, etc.
   }],
   // Timing
@@ -37,7 +37,7 @@ const eventSchema = new mongoose.Schema({
 
   // Audience Control
   branches: [{
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Branch'
   }],
   guestTiers: [{
@@ -61,4 +61,4 @@ const eventSchema = new mongoose.Schema({
 eventSchema.index({ startDate: 1, endDate: 1 });
 eventSchema.index({ isActive: 1 });
 
-module.exports = mongoose.model('Event', eventSchema);
+export default model('Event', eventSchema);
