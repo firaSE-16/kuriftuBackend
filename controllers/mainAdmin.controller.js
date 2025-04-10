@@ -1,3 +1,5 @@
+
+import Spa from '../models/Spa.models.js';
 import Food from "../models/Food.model.js";
 import Service from "../models/Service.models.js";
 import { genSalt } from "bcrypt";
@@ -525,8 +527,159 @@ export const deleteFood = async (req, res) => {
   }
 };
 
-  
 
+// spa 
+
+export const addSpa = async (req, res) => {
+  try {
+    const {
+      name,
+      description,
+      treatmentTypes,
+      images,
+      isActive = true
+    } = req.body;
+
+    // Required fields check
+    if (!name || !description || !treatmentTypes || treatmentTypes.length === 0) {
+      return res.status(400).json({
+        message: "Missing required fields",
+        required: ["name", "description", "treatmentTypes"]
+      });
+    }
+
+    // Validate treatment types
+    for (const treatment of treatmentTypes) {
+      if (!treatment.name || !treatment.duration || !treatment.price) {
+        return res.status(400).json({
+          message: "Each treatment must have name, duration and price",
+          treatment
+        });
+      }
+    }
+
+    // Check if spa service exists
+    const existingSpa = await Service.findOne({ name, serviceType: 'Spa' });
+    if (existingSpa) {
+      return res.status(409).json({ message: "Spa service already exists" });
+    }
+
+    // Create spa service (without branch association)
+    const newSpa = await Spa.create({
+      name,
+      description,
+      treatmentTypes,
+      images,
+      isActive
+    });
+
+    // Create generic service entry (branch admins will add branch-specific pricing)
+    const newService = await Service.create({
+      name,
+      description,
+      images,
+      serviceType: 'Spa',
+      price: [] // Empty array - branches will add their own pricing
+    });
+
+    res.status(201).json({
+      message: "Spa service added successfully",
+      data: {
+        spa: newSpa,
+        service: newService
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to add spa service",
+      error: error.message
+    });
+  }
+};
+
+export const updateSpa = async (req, res) => {
+  try {
+    const { id, ...updateData } = req.body;
+
+    // Validate treatment types if they're being updated
+    if (updateData.treatmentTypes) {
+      for (const treatment of updateData.treatmentTypes) {
+        if (!treatment.name || !treatment.duration || !treatment.price) {
+          return res.status(400).json({
+            message: "Each treatment must have name, duration and price",
+            treatment
+          });
+        }
+      }
+    }
+
+    const updatedSpa = await Spa.findByIdAndUpdate(
+      id,
+      updateData,
+      { 
+        new: true,
+        runValidators: true 
+      }
+    );
+
+    if (!updatedSpa) {
+      return res.status(404).json({ message: "Spa service not found" });
+    }
+
+    // Update the corresponding service entry (name/description/images only)
+    await Service.updateOne(
+      { name: updatedSpa.name, serviceType: 'Spa' },
+      { 
+        $set: { 
+          description: updatedSpa.description,
+          images: updatedSpa.images
+        } 
+      }
+    );
+
+    res.status(200).json({
+      message: "Spa service updated successfully",
+      data: updatedSpa
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to update spa service",
+      error: error.message
+    });
+  }
+};
+export const deleteSpa = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const spaService = await Spa.findByIdAndDelete(id);
+    if (!spaService) {
+      return res.status(404).json({ message: "Spa service not found" });
+    }
+
+    // Delete the corresponding service entry
+    await Service.deleteOne({ 
+      name: spaService.name, 
+      serviceType: 'Spa' 
+    });
+
+    res.status(200).json({
+      message: "Spa service deleted successfully",
+      data: {
+        id: spaService._id,
+        name: spaService.name
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to delete spa service",
+      error: error.message
+    });
+  }
+};
  
 
 

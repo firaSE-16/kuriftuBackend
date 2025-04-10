@@ -12,7 +12,10 @@ import {
   addFood,
   getAllFood,
   getSingleFood,
-  updateFood
+  updateFood,
+  addSpa,
+  updateSpa,
+  deleteSpa
 } from '../controllers/mainAdmin.controller.js';
 
 const router = express.Router();
@@ -38,4 +41,13 @@ router.get("/food",getAllFood)
 router.get("/food/:id",getSingleFood)
 router.put("/food/:id",updateFood)
 
+
+
+// spa routes
+
+router.post("/spa",addSpa)
+router.put("/spa/:id",updateSpa)
+router.delete("/spa/:id",deleteSpa)
+// router.get("/spa",)
+// router.get("/spa",)
 export default router;

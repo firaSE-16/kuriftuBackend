@@ -1,4 +1,4 @@
-import { discriminator } from './Service';
+import Service from "./Service.models.js"
 import { Schema } from 'mongoose';
 
 const spaSchema = new Schema({
@@ -9,5 +9,9 @@ const spaSchema = new Schema({
     price: Number
   }],
 });
+const Spa=Service.discriminator('Spa', spaSchema);
 
-export default discriminator('Spa', spaSchema);
+export default Spa;
+
+
+
