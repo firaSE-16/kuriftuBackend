@@ -12,7 +12,7 @@ const foodSchema = new Schema({
     type: String,
     required: true
   },
-  code: { // Internal SKU/shortcode
+  code: { 
     type: String,
     unique: true,
     required: true

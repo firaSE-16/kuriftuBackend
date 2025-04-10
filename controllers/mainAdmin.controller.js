@@ -296,6 +296,236 @@ export const addBranch = async (req, res) => {
       });
     }
   };
+import Food from "../models/Food.js";
+import Service from "../models/Service.js";
+
+export const addFood = async (req, res) => {
+  try {
+    const {
+      name,
+      description,
+      code,
+      basePrice,
+      category,
+      cuisineType,
+      dietaryTags,
+      preparationTime,
+      isPrepared,
+      ingredients,
+      images,
+      isAvailable,
+      availableAt,
+      isSeasonal,
+      limitedTimeOffer
+    } = req.body;
+
+    // Required fields check
+    if (!name || !description || !code || !basePrice || !category || !preparationTime) {
+      return res.status(400).json({
+        message: "Missing required fields",
+        required: ["name", "description", "code", "basePrice", "category", "preparationTime"]
+      });
+    }
+
+    // Check if food item with same code already exists
+    const existingFood = await Food.findOne({ code });
+    if (existingFood) {
+      return res.status(409).json({ message: "Food item with this code already exists" });
+    }
+
+    // Create new food item
+    const newFood = await Food.create({
+      name,
+      description,
+      code,
+      basePrice,
+      category,
+      cuisineType,
+      dietaryTags,
+      preparationTime,
+      isPrepared,
+      ingredients,
+      images,
+      isAvailable,
+      availableAt,
+      isSeasonal,
+      limitedTimeOffer
+    });
+
+    // Also create a corresponding service entry
+    const newService = await Service.create({
+      name,
+      description,
+      price: [{
+        cost: basePrice,
+        branch: availableAt[0] || null // Using first available branch if exists
+      }],
+      images,
+      serviceType: 'Food'
+    });
+
+    res.status(201).json({
+      message: "Food item added successfully",
+      data: {
+        food: newFood,
+        service: newService
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to add food item",
+      error: error.message
+    });
+  }
+};
+
+export const updateFood = async (req, res) => {
+  try {
+    const { id, ...updateData } = req.body;
+
+    // If basePrice is updated, also update the corresponding service price
+    if (updateData.basePrice) {
+      const food = await Food.findById(id);
+      if (food) {
+        await Service.updateOne(
+          { name: food.name, serviceType: 'Food' },
+          { $set: { "price.0.cost": updateData.basePrice } }
+        );
+      }
+    }
+
+    const updatedFood = await Food.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!updatedFood) {
+      return res.status(404).json({ message: "Food item not found" });
+    }
+
+    res.status(200).json({
+      message: "Food item updated successfully",
+      data: updatedFood
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to update food item",
+      error: error.message
+    });
+  }
+};
+
+export const getAllFood = async (req, res) => {
+  try {
+    const { category, cuisineType, dietaryTags, search } = req.query;
+    const query = {};
+
+    if (category) query.category = category;
+    if (cuisineType) query.cuisineType = cuisineType;
+    if (dietaryTags) query.dietaryTags = { $in: dietaryTags.split(',') };
+    if (search) query.$text = { $search: search };
+
+    const allFood = await Food.find(query)
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      message: "All food items fetched successfully",
+      count: allFood.length,
+      data: allFood
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch food items",
+      error: error.message
+    });
+  }
+};
+
+export const getSingleFood = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const foodItem = await Food.findById(id);
+    if (!foodItem) {
+      return res.status(404).json({ message: "Food item not found" });
+    }
+
+    res.status(200).json({
+      message: "Food item fetched successfully",
+      data: foodItem
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch food item",
+      error: error.message
+    });
+  }
+};
+
+export const toggleFoodAvailability = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const foodItem = await Food.findById(id);
+    if (!foodItem) {
+      return res.status(404).json({ message: "Food item not found" });
+    }
+
+    const updatedFood = await Food.findByIdAndUpdate(
+      id,
+      { isAvailable: !foodItem.isAvailable },
+      { new: true }
+    );
+
+    // Also update the corresponding service status
+    await Service.updateOne(
+      { name: foodItem.name, serviceType: 'Food' },
+      { isActive: updatedFood.isAvailable }
+    );
+
+    res.status(200).json({
+      message: `Food item ${updatedFood.isAvailable ? 'activated' : 'deactivated'} successfully`,
+      data: updatedFood
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to toggle food availability",
+      error: error.message
+    });
+  }
+};
+
+export const deleteFood = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const foodItem = await Food.findByIdAndDelete(id);
+    if (!foodItem) {
+      return res.status(404).json({ message: "Food item not found" });
+    }
+
+    // Also delete the corresponding service
+    await Service.deleteOne({ name: foodItem.name, serviceType: 'Food' });
+
+    res.status(200).json({
+      message: "Food item deleted successfully",
+      data: foodItem
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to delete food item",
+      error: error.message
+    });
+  }
+};
+
+  
 
  
 
