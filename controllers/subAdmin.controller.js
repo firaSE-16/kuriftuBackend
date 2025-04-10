@@ -1,9 +1,11 @@
+import User from "../models/User.model.js";
+import Employee from "../models/Employee.model.js";
+import Guest from "../models/Guest.model.js";
+import Branch from "../models/Branch.model.js";
 import Feedback from "../models/Feedback.model.js";
 import Service from "../models/Service.model.js";
 import mongoose from "mongoose";
-import Employee from "../models/Employee.model.js";
-import User from "../models/User.model.js";
-import Branch from "../models/Branch.model.js";
+
 
 
 const addEmployee = async (req, res) => {
@@ -360,11 +362,115 @@ const getServiceTypeFeedbacks = async (req, res) => {
   }
 };
 
-;
+const getBranchUsers = async (req, res) => {
+  try {
+    const subAdmin = req.user; // Authenticated subadmin
+    const { role, search, page = 1, limit = 10 } = req.query;
+
+    // Validate the requesting user has branch access
+    if (!subAdmin.branch) {
+      return res.status(403).json({
+        message: "Unauthorized - You are not assigned to any branch"
+      });
+    }
+
+    // Build the base query
+    const branchQuery = { branch: subAdmin.branch };
+    const searchQuery = search ? { 
+      $or: [
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ]
+    } : {};
+
+    // Combine queries based on role filter
+    let query = { ...branchQuery, ...searchQuery };
+    if (role) {
+      query.role = role.toLowerCase();
+    }
+
+    // Options for pagination
+    const options = {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      sort: { createdAt: -1 }
+    };
+
+    // Get users from all collections (Employees, Guests, etc.)
+    const [employees, guests, otherUsers] = await Promise.all([
+      Employee.paginate(query, options),
+      Guest.paginate({ ...searchQuery, branch: subAdmin.branch }, options),
+      User.paginate({ ...query, branch: subAdmin.branch }, options)
+    ]);
+
+    // Combine results while maintaining pagination structure
+    const combinedResults = {
+      docs: [
+        ...employees.docs.map(doc => ({ ...doc.toObject(), userType: 'employee' })),
+        ...guests.docs.map(doc => ({ ...doc.toObject(), userType: 'guest' })),
+        ...otherUsers.docs.map(doc => ({ ...doc.toObject(), userType: 'user' }))
+      ],
+      totalDocs: employees.totalDocs + guests.totalDocs + otherUsers.totalDocs,
+      limit: options.limit,
+      page: options.page,
+      totalPages: Math.ceil((employees.totalDocs + guests.totalDocs + otherUsers.totalDocs) / options.limit),
+      pagingCounter: options.page,
+      hasPrevPage: options.page > 1,
+      hasNextPage: options.page < Math.ceil((employees.totalDocs + guests.totalDocs + otherUsers.totalDocs) / options.limit)
+    };
+
+    if (combinedResults.docs.length === 0) {
+      return res.status(404).json({
+        message: "No users found in this branch",
+        branch: subAdmin.branch
+      });
+    }
+
+    res.status(200).json({
+      message: "Branch users retrieved successfully",
+      branch: subAdmin.branch,
+      currentPage: combinedResults.page,
+      totalPages: combinedResults.totalPages,
+      totalUsers: combinedResults.totalDocs,
+      data: combinedResults.docs.map(user => ({
+        id: user._id,
+        userType: user.userType,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role || (user.userType === 'guest' ? 'Guest' : 'Employee'),
+        createdAt: user.createdAt,
+        ...(user.userType === 'employee' && { 
+          employeeId: user.employeeId,
+          employeeType: user.employeeType,
+          workingHours: user.workingHours
+        }),
+        ...(user.userType === 'guest' && {
+          visitCount: user.visitCount,
+          lastVisit: user.lastVisit
+        })
+      }))
+    });
+
+  } catch (error) {
+    console.error("Error fetching branch users:", error);
+    res.status(500).json({
+      message: "Server Error",
+      error: error.message
+    });
+  }
+};
+
+
+
+
 
 
 export {
-    sayhi,
+    
+    getBranchUsers,
     getServiceTypeFeedbacks,
     addService,
   addEmployee,
