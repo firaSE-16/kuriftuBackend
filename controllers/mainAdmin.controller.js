@@ -1,3 +1,5 @@
+import Food from "../models/Food.model.js";
+import Service from "../models/Service.models.js";
 import { genSalt } from "bcrypt";
 import Branch from "../models/Branch.model.js";
 import Employee from "../models/Employee.model.js";
@@ -296,8 +298,6 @@ export const addBranch = async (req, res) => {
       });
     }
   };
-import Food from "../models/Food.js";
-import Service from "../models/Service.js";
 
 export const addFood = async (req, res) => {
   try {

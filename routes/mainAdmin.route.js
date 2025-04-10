@@ -8,7 +8,11 @@ import {
   updateSubAdmin,
   getAllEmployee,
   getCustomerSatisfaction,
-  getServiceCustomerSatisfaction
+  getServiceCustomerSatisfaction,
+  addFood,
+  getAllFood,
+  getSingleFood,
+  updateFood
 } from '../controllers/mainAdmin.controller.js';
 
 const router = express.Router();
@@ -27,5 +31,11 @@ router.get('/employees', getAllEmployee);
 
 router.get('/customer-satisfaction', getCustomerSatisfaction);
 router.get('/service-customer-satisfaction', getServiceCustomerSatisfaction);
+
+// food routes
+router.post("/food",addFood)
+router.get("/food",getAllFood)
+router.get("/food/:id",getSingleFood)
+router.put("/food/:id",updateFood)
 
 export default router;
